@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	
+	<groupId>org.springframework</groupId>
+	<artifactId>hello-world</artifactId>
+	<packaging>jar</packaging>
+	<version>0.1.0</version>
+
+	<properties>
+		<maven.compiler.source>1.8</maven.compiler.source>
+		<maven.compiler.target>1.8</maven.compiler.target>
+<!--		<fabric8.plugin.version>0.34.1</fabric8.plugin.version>-->
+		<jkube.version>1.1.0</jkube.version>
+		<jkube.docker.host>tcp://192.168.56.104:2375</jkube.docker.host>
+		<jkube.docker.push.registry>registry.algosec.com:5000</jkube.docker.push.registry>
+		<jkube.helm.home>src/main/helm-chart</jkube.helm.home>
+		<docker.image.path>asms/${project.artifactId}:${project.version}</docker.image.path>
+		<docker.dockerfile.path>${project.basedir}/src/main/docker/Dockerfile</docker.dockerfile.path>
+		<docker.application.jar>target/${project.artifactId}.jar</docker.application.jar>
+	</properties>
+
+	<dependencies>
+		<!-- tag::joda[] -->
+		<dependency>
+			<groupId>joda-time</groupId>
+			<artifactId>joda-time</artifactId>
+			<version>2.9.2</version>
+		</dependency>
+		<!-- end::joda[] -->
+	</dependencies>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-shade-plugin</artifactId>
+				<version>3.2.4</version>
+				<executions>
+					<execution>
+						<phase>package</phase>
+						<goals>
+							<goal>shade</goal>
+						</goals>
+						<configuration>
+							<transformers>
+								<transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+									<mainClass>hello.HelloWorld</mainClass>
+								</transformer>
+							</transformers>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.eclipse.jkube</groupId>
+				<artifactId>kubernetes-maven-plugin</artifactId>
+				<version>${jkube.version}</version>
+				<extensions>true</extensions>
+				<configuration>
+					<verbose>true</verbose>
+					<images>
+						<image>
+							<name>${docker.image.path}</name>
+							<build>
+								<args>
+									<JAR_FILE>${docker.application.jar}</JAR_FILE>
+								</args>
+								<contextDir>${project.basedir}</contextDir>
+								<dockerFile>${docker.dockerfile.path}</dockerFile>
+								<tags>
+									<tag>${project.version}</tag>
+								</tags>
+								<assembly>
+									<name>target</name>
+									<targetDir>${project.basedir}</targetDir>
+								</assembly>
+							</build>
+						</image>
+					</images>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+
+</project>
